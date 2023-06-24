@@ -39,13 +39,13 @@ def add_new_note():
 
 
 def change_note():
-    array_of_fields = ["id", "testNote"]
+    array_of_fields = ["id", "headNote"]
     if not _check_exists_of_data(): return
     show_all()
-    answer = int(input("Введите номер записи, которую хотите изменить"))
+    answer = int(input("Введите номер записи, которую хотите изменить  : "))
     cur_data = all_data[answer-1].split(" ")
-    field_name = input("Введите название поля которое хотите обновить")
-    new_value = input("Введите новое значение")
+    field_name = input("Введите название поля которое хотите обновить (Возможные варианты id | headNote) : ")
+    new_value = input("Введите новое значение : ")
     cur_data[array_of_fields.index(field_name)] = new_value
     all_data[answer-1] = " ".join(cur_data)
     _write_data_in_file(all_data)
@@ -54,15 +54,15 @@ def delete_note():
     global last_id
     if not _check_exists_of_data(): return
     show_all()
-    answer = int(input("Введите номер записи, которую хотите удалить"))
+    answer = int(input("Введите номер записи, которую хотите удалить : "))
     all_data.pop(answer-1)
     _rewrite_indexes()
     _write_data_in_file(all_data)
 
 def search_record():
     if not _check_exists_of_data(): return
-    search_type, search_info = input("Введите имя или фамилию :: name <искомое значение> или surname <искомое значение>").split(" ")
-    array_of_fields = ["id", "testNote"]
+    search_type, search_info = input("Введите номер заметки :: id <номер заметки> или headNote <заголовок заметки>  : ").split(" ")
+    array_of_fields = ["id", "headNote"]
     for x in all_data:
         if x.split(" ")[array_of_fields.index(search_type)] == search_info:
             print(x)
