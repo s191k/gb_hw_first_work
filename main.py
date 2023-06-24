@@ -1,71 +1,82 @@
-import datetime
+import json
+import os
 from os import path
 
-file_base = "base.txt"
-last_id = 0
+from Note import Note
+
+file_base = "base.json"
 all_data = []
 
 if not path.exists(file_base):
     with open(file_base, "w", encoding="utf-8") as _:
         pass
 
-def read_note():
-    global last_id, all_data
+def read_note_file():
+    global all_data
 
-    with open(file_base, encoding="utf-8") as f:
-        all_data = [i.strip() for i in f]
-        if all_data:
-            last_id = int(all_data[-1].split()[0])
-            return all_data
-    return []
+    if os.stat(file_base).st_size != 0:
+        with open(file_base, "r", encoding="utf-8") as file:
+                loaded_notse = json.loads(file.read())
+                all_data = []
+                for x in loaded_notse:
+                    all_data.append(Note(int(x['id']), x['head'], x['body'], x['createDate']))
+                return all_data
+
+
+def save_note_file():
+    global all_data
+
+    with open(file_base, "w", encoding="utf-8") as file:
+        file.write(json.dumps(all_data, default=lambda x: x.__dict__))
 
 def show_all():
     if all_data:
-        print(*all_data, sep="\n")
+        for x in all_data:
+            print(x)
     else:
         print("Заметок нет")
 
 def add_new_note():
+    global all_data
 
-    global last_id
-    last_id += 1
-
-    string = ""
-    for i in ['Введите заголовок заметки:', 'Введите тело заметки:']:
-        string += input(f"{i} ") + " "
-
-    with open(file_base, "a", encoding="utf-8") as f:
-        f.write(f"{last_id} {string} {datetime.datetime.now()}\n")
-
+    head = input('Введите заголовок заметки:')
+    body = input('Введите тело заметки:')
+    if os.stat(file_base).st_size != 0:
+        all_data.append(Note(all_data[-1].id +1, head,body,None))
+    else:
+        all_data.append(Note(None, head,body,None))
+    save_note_file()
 
 def change_note():
-    array_of_fields = ["id", "headNote"]
     if not _check_exists_of_data(): return
     show_all()
     answer = int(input("Введите номер записи, которую хотите изменить  : "))
-    cur_data = all_data[answer-1].split(" ")
+    cur_data = all_data[answer-1]
     field_name = input("Введите название поля которое хотите обновить (Возможные варианты id | headNote) : ")
     new_value = input("Введите новое значение : ")
-    cur_data[array_of_fields.index(field_name)] = new_value
-    all_data[answer-1] = " ".join(cur_data)
-    _write_data_in_file(all_data)
+
+    match field_name:
+        case "id":
+            cur_data.id = int(new_value)
+        case "head":
+            cur_data.head = new_value
+    save_note_file()
 
 def delete_note():
-    global last_id
     if not _check_exists_of_data(): return
     show_all()
     answer = int(input("Введите номер записи, которую хотите удалить : "))
     all_data.pop(answer-1)
-    _rewrite_indexes()
-    _write_data_in_file(all_data)
+    save_note_file()
 
 def search_record():
     if not _check_exists_of_data(): return
-    search_type, search_info = input("Введите номер заметки :: id <номер заметки> или headNote <заголовок заметки>  : ").split(" ")
-    array_of_fields = ["id", "headNote"]
+    search_type, search_info = input("Введите номер заметки :: id <номер заметки> или head <заголовок заметки>  : ").split(" ")
     for x in all_data:
-        if x.split(" ")[array_of_fields.index(search_type)] == search_info:
+        if x.id == int(search_info) or x.head == search_info:
             print(x)
+            break
+    print("Такой записи не найдено")
 
 def import_in_file(file_path):
     global last_id, all_data
@@ -95,7 +106,7 @@ def _rewrite_indexes():
     last_id = index
 
 def _check_exists_of_data():
-    read_note()
+    read_note_file()
     if not all_data:
         print("нет записей")
         return False
@@ -104,7 +115,7 @@ def _check_exists_of_data():
 def main_menu():
     play = True
     while play:
-        read_note()
+        read_note_file()
         answer = input("Заметки:\n"
                        "1. Показать все заметки\n"
                        "2. Добавить\n"
